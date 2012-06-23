@@ -1,4 +1,4 @@
-application: acsalu-gaetest
+application: frontcast-server
 version: 1
 runtime: python
 api_version: 1

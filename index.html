@@ -1,0 +1,23 @@
+<html>
+<head>
+  <title>Frontcast Test</title>
+</head>
+<body>
+  <form action="/postFrontcast" method="post">
+    <div>Facebook ID: <input type="text" name="user_id"></div>
+    <div>Location: 
+      latitude <input type="text" name ="lat"> 
+      longitude <input type="text" name="long">
+    </div>
+    <div> Weather: 
+      <select name="type">
+      	<option>Sunny</option>
+      	<option>Cloudy</option>
+      	<option>Rainy</option>
+      </select>
+    </div>
+    <div> Level: <input type="text" name="level"></div>
+    <div><input type="submit" value="Post Frontcast"></div>
+  </form>
+</body>
+</html>

@@ -34,6 +34,11 @@ class Frontcast(db.Model):
     type = db.CategoryProperty()
     level = db.FloatProperty()
 
+
+class PostFrontCast(webapp.RequestHandler):
+    def post(self):
+        
+
 class RPCHandler(webapp.RequestHandler):
     """ Allows the functions defined in the RPCMethods class to be RPCed."""
     def __init__(self):
