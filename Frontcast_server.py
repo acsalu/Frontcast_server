@@ -56,7 +56,7 @@ class Frontcast(db.Model):
 class RPCHandler(webapp.RequestHandler):
     """ Allows the functions defined in the RPCMethods class to be RPCed."""
     def __init__(self):
-        BaseHandler.__init__(self)
+        webapp.RequestHandler.__init__(self)
         self.methods = RPCMethods()
 
     def post(self):
@@ -90,22 +90,15 @@ class RPCMethods():
         frontcast.put()
         print (frontcast.location.lat)
         return
-    """
+    
     def GetFrontcasts(self, locationName, *args):
         center = GeoCode(locationName)
         bound = (center.lat - 0.1, center.lat + 0.1, center.lon + 0.1, center.lon - 0.1)
 
-        query = db.gqlquery("SELECT * FROM Frontcast 
-                                      WHERE location.lat >= :left
-                                        AND location.lat <= :right
-                                        AND location.lon <= :top
-                                        AND location.lon >= :bottom
-                                      ORDER BY time
-                                      LIMIT 100",
-                                        left = center[0], right = center[1],
-                                        top = center[2], bottom = center[3])
+        query = db.Gqlquery("SELECT * FROM Frontcast WHERE location.lat >= :left AND location.lat <= :right AND location.lon <= :top AND location.lon >= :bottom ORDER BY time DSEC LIMIT 100",
+                             left = center[0], right = center[1], top = center[2], bottom = center[3])
         return query
-    """
+    
     """
     def GetGreetings(self, current_user, *args):
         greetings_query = Greeting.all().order('-date')
@@ -128,7 +121,7 @@ def main():
         [(r"/", HomeHandler),
          (r"/rpc", RPCHandler)],
         debug = True))
-    GeoCode(address = "taipei", sensor = "true")
+    #GeoCode(address = "taipei", sensor = "true")
 
 if __name__ == "__main__":
     main()
