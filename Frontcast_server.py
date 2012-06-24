@@ -12,11 +12,30 @@ import urllib
 import wsgiref.handlers
 import json
 
+import sys
+import urlparse
+
 from django.utils import simplejson
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 from google.appengine.ext.webapp import template
+
+def GeoCode(address, sensor = "true", **geo_args):
+    geo_args.update({
+        'address': address,
+        'sensor': sensor  
+    })
+    GEOCODE_BASE_URL = 'http://maps.googleapis.com/maps/api/geocode/json' 
+    url = GEOCODE_BASE_URL + '?' + urllib.urlencode(geo_args)
+    results = simplejson.load(urllib.urlopen(url))
+    #print simplejson.dumps([s['formatted_address'] for s in results['results']], indent=2)
+    #print (results['results'][0]['geometry']['location']['lat'])
+    #print (results['results'][0]['geometry']['location']['lng'])
+    geoCoordinate = results['results'][0]['geometry']['location']
+    print (geoCoordinate['lat'])
+    print (geoCoordinate['lng'])
+    return db.GeoPt(lat = geoCoordinate['lat'], lon = geoCoordinate['lng'])
 
 class HomeHandler(webapp.RequestHandler):
     def get(self):
@@ -32,7 +51,7 @@ class Frontcast(db.Model):
     time = db.DateTimeProperty(auto_now_add=True)
     location = db.GeoPtProperty()
     type = db.CategoryProperty()
-    level = db.FloatProperty()
+    level = db.IntergerProperty()
 
 class RPCHandler(webapp.RequestHandler):
     """ Allows the functions defined in the RPCMethods class to be RPCed."""
@@ -62,6 +81,31 @@ class RPCMethods():
     NOTE: Do not allow remote callers access to private/protected "_*" methods.
     """
 
+    def ReportFrontcast(self, *args):
+        frontcast = Frontcast()
+        frontcast.user_id = args[0]
+        frontcast.location = db.GeoPt(lat = float(args[1]), lon = float(args[2]))
+        frontcast.type = db.Category(args[3])
+        frontcast.level = int(args[4])
+        frontcast.put()
+        #print (frontcast.location.lat)
+
+    def GetFrontcasts(self, locationName, *args):
+        center = GeoCode(locationName)
+        bound = (center.lat - 0.1, center.lat + 0.1, center.lon + 0.1, center.lon - 0.1)
+
+        frontcast_query = Frontcast.all().order('-time')
+        query = db.gqlquery("SELECT * FROM Frontcast 
+                                      WHERE location.lat >= :left
+                                        AND location.lat <= :right
+                                        AND location.lon <= :top
+                                        AND location.lon >= :bottom
+                                      ORDER BY time
+                                      LIMIT 100",
+                                        left = center[0], right = center[1],
+                                        top = center[2], bottom = center[3])
+         
+
     """
     def GetGreetings(self, current_user, *args):
         greetings_query = Greeting.all().order('-date')
@@ -84,6 +128,7 @@ def main():
         [(r"/", HomeHandler),
          (r"/rpc", RPCHandler)],
         debug = True))
+    GeoCode(address = "taipei", sensor = "true")
 
 if __name__ == "__main__":
     main()
