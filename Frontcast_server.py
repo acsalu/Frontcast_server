@@ -45,13 +45,13 @@ class HomeHandler(webapp.RequestHandler):
         args = dict(frontcasts = theFrontcasts)
         self.response.out.write(template.render(path, args))
 
-
 class Frontcast(db.Model):
     user_id = db.StringProperty()
     time = db.DateTimeProperty(auto_now_add=True)
     location = db.GeoPtProperty()
     type = db.CategoryProperty()
-    level = db.IntergerProperty()
+    level = db.IntegerProperty()
+
 
 class RPCHandler(webapp.RequestHandler):
     """ Allows the functions defined in the RPCMethods class to be RPCed."""
@@ -88,13 +88,13 @@ class RPCMethods():
         frontcast.type = db.Category(args[3])
         frontcast.level = int(args[4])
         frontcast.put()
-        #print (frontcast.location.lat)
-
+        print (frontcast.location.lat)
+        return
+    """
     def GetFrontcasts(self, locationName, *args):
         center = GeoCode(locationName)
         bound = (center.lat - 0.1, center.lat + 0.1, center.lon + 0.1, center.lon - 0.1)
 
-        frontcast_query = Frontcast.all().order('-time')
         query = db.gqlquery("SELECT * FROM Frontcast 
                                       WHERE location.lat >= :left
                                         AND location.lat <= :right
@@ -104,8 +104,8 @@ class RPCMethods():
                                       LIMIT 100",
                                         left = center[0], right = center[1],
                                         top = center[2], bottom = center[3])
-         
-
+        return query
+    """
     """
     def GetGreetings(self, current_user, *args):
         greetings_query = Greeting.all().order('-date')
