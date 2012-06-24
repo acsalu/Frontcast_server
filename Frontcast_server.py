@@ -47,7 +47,7 @@ class HomeHandler(webapp.RequestHandler):
 
 class Frontcast(db.Model):
     user_id = db.StringProperty()
-    time = db.DateTimeProperty(auto_now_add=True)
+    time = db.DateTimeProperty(auto_now_add=False)
     location = db.GeoPtProperty()
     type = db.CategoryProperty()
     level = db.IntegerProperty()
@@ -87,16 +87,17 @@ class RPCMethods():
         frontcast.location = db.GeoPt(lat = float(args[1]), lon = float(args[2]))
         frontcast.type = db.Category(args[3])
         frontcast.level = int(args[4])
+        frontcast.time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
         frontcast.put()
         print (frontcast.location.lat)
         return
     
     def GetFrontcasts(self, locationName, *args):
         center = GeoCode(locationName)
-        bound = (center.lat - 0.1, center.lat + 0.1, center.lon + 0.1, center.lon - 0.1)
+        bound = (center.lat + 0.1, center.lat - 0.1, center.lon - 0.1, center.lon + 0.1)
 
-        query = db.Gqlquery("SELECT * FROM Frontcast WHERE location.lat >= :left AND location.lat <= :right AND location.lon <= :top AND location.lon >= :bottom ORDER BY time DSEC LIMIT 100",
-                             left = center[0], right = center[1], top = center[2], bottom = center[3])
+        query = db.GqlQuery("SELECT * FROM Frontcast WHERE location.lat <= :top AND location.lat >= :bottom AND location.lon >= :left AND location.lon <= :right ORDER BY time DESC LIMIT 100",
+                             top = center[0], bottom = center[1], left = center[2], right = center[3])
         return query
     
     """

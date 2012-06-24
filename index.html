@@ -13,6 +13,8 @@
     <div> Weather: <input type="text" id="type"></div>
     <div> Level: <input type="text" id="level"></div>
     <div> <button id="submit">submit</button> <div>
+
+    <div> <button id="get">get</button> </div>
     <script>
 		$("#submit").click(function() {
 			alert('hi');
@@ -24,7 +26,19 @@
 			}).done(function(response) {
 				console.log(response);
 			});
-		});
+      });
+      
+      $("#get").click(function() {
+			alert('query');
+			var params = ["GetFrontcasts", "Taipei"];
+			$.ajax({
+				type:'POST', 
+				url:'/rpc', 
+				data: JSON.stringify(params)
+			}).done(function(response) {
+				console.log(response);
+			});
+      });
 	</script>
 </body>
 </html>
