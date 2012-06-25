@@ -3,6 +3,7 @@
 <head>
   <title>Frontcast Test</title>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
 <body>
     <div>Facebook ID: <input type="text" id="user_id"></div>
@@ -14,6 +15,7 @@
     <div> Level: <input type="text" id="level"></div>
     <div> <button id="submit">submit</button> <div>
 
+    <div> Name: <input type="text" id="name"></div>
     <div> <button id="get">get</button> </div>
     <script>
 		$("#submit").click(function() {
@@ -30,10 +32,10 @@
       
       $("#get").click(function() {
 			alert('query');
-			var params = ["GetFrontcasts", "Taipei"];
+			var params = ["GetFrontcasts", $("#name").val()];
 			$.ajax({
 				type:'POST', 
-				url:'/rpc', 
+            url:'/rpc', 
 				data: JSON.stringify(params)
 			}).done(function(response) {
 				console.log(response);

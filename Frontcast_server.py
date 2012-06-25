@@ -38,7 +38,6 @@ def GeoCode(address, sensor = "true", **geo_args):
     #return db.GeoPt(lat = geoCoordinate['lat'], lon = geoCoordinate['lng'])
     return {'lat' : geoCoordinate['lat'], 'lon' : geoCoordinate['lng']}
 
-
 class HomeHandler(webapp.RequestHandler):
     def get(self):
         path = os.path.join(os.path.dirname(__file__), "index.html")
