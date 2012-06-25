@@ -35,7 +35,9 @@ def GeoCode(address, sensor = "true", **geo_args):
     geoCoordinate = results['results'][0]['geometry']['location']
     print (geoCoordinate['lat'])
     print (geoCoordinate['lng'])
-    return db.GeoPt(lat = geoCoordinate['lat'], lon = geoCoordinate['lng'])
+    #return db.GeoPt(lat = geoCoordinate['lat'], lon = geoCoordinate['lng'])
+    return {'lat' : geoCoordinate['lat'], 'lon' : geoCoordinate['lng']}
+
 
 class HomeHandler(webapp.RequestHandler):
     def get(self):
@@ -48,7 +50,9 @@ class HomeHandler(webapp.RequestHandler):
 class Frontcast(db.Model):
     user_id = db.StringProperty()
     time = db.DateTimeProperty(auto_now_add=False)
-    location = db.GeoPtProperty()
+    latitude = db.FloatProperty()
+    longitude = db.FloatProperty()
+    #location = db.GeoPtProperty()
     type = db.CategoryProperty()
     level = db.IntegerProperty()
 
@@ -84,21 +88,32 @@ class RPCMethods():
     def ReportFrontcast(self, *args):
         frontcast = Frontcast()
         frontcast.user_id = args[0]
-        frontcast.location = db.GeoPt(lat = float(args[1]), lon = float(args[2]))
+        #frontcast.location = db.GeoPt(lat = float(args[1]), lon = float(args[2]))
+        frontcast.latitude = float(args[1])
+        frontcast.longitude = float(args[2])
         frontcast.type = db.Category(args[3])
         frontcast.level = int(args[4])
         frontcast.time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
         frontcast.put()
-        print (frontcast.location.lat)
+        #print (frontcast.location.lat)
         return
     
     def GetFrontcasts(self, locationName, *args):
         center = GeoCode(locationName)
-        bound = (center.lat + 0.1, center.lat - 0.1, center.lon - 0.1, center.lon + 0.1)
+        #bound = (center.lat + 0.1, center.lat - 0.1, center.lon - 0.1, center.lon + 0.1)
+        bound = (center['lat'] + 0.1, center['lat'] - 0.1, center['lon'] - 0.1, center['lon'] + 0.1)
 
-        query = db.GqlQuery("SELECT * FROM Frontcast WHERE location.lat <= :top AND location.lat >= :bottom AND location.lon >= :left AND location.lon <= :right ORDER BY time DESC LIMIT 100",
-                             top = center[0], bottom = center[1], left = center[2], right = center[3])
-        return query
+        #query = db.GqlQuery("SELECT * FROM Frontcast WHERE location.lat <= :top AND location.lat >= :bottom AND location.lon >= :left AND location.lon <= :right ORDER BY time DESC LIMIT 100",
+        #                     top = center[0], bottom = center[1], left = center[2], right = center[3])
+        query = db.GqlQuery("SELECT * FROM Frontcast WHERE latitude <= :top AND latitude >= :bottom  ORDER BY latitude DESC LIMIT 200",
+                             top = bound[0], bottom = bound[1])
+        castList = []
+        for cast in query:
+            if cast.longitude >= bound[2] and cast.longitude <= bound[3]:
+                castList.append(cast)
+        #castList.sort(key=lambda x: x.time, reverse=True)
+        #return castList
+        return sorted(castList, key=lambda x: x.time, reverse=True)
     
     """
     def GetGreetings(self, current_user, *args):
