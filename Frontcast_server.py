@@ -106,7 +106,8 @@ class RPCMethods():
             return ''
         
         bound = (center['lat'] + 0.1, center['lat'] - 0.1, center['lon'] - 0.1, center['lon'] + 0.1)
-        query = db.GqlQuery("SELECT * FROM Frontcast WHERE latitude <= :top AND latitude >= :bottom  ORDER BY latitude DESC LIMIT 200",
+        query = db.GqlQuery("SELECT * FROM Frontcast WHERE 
+              latitude <= :top AND latitude >= :bottom  ORDER BY latitude DESC LIMIT 200",
                              top = bound[0], bottom = bound[1])
         castList = []
         for cast in query:
@@ -164,7 +165,7 @@ def main():
         [(r"/", HomeHandler),
          (r"/rpc", RPCHandler)],
         debug = True))
-    GeoCode(address = "taipei", sensor = "true")
+    #GeoCode(address = "taipei", sensor = "true")
 
 if __name__ == "__main__":
     main()
