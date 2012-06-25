@@ -1,3 +1,4 @@
+ #coding=utf-8 
 import datetime
 import base64
 import cgi
@@ -98,6 +99,8 @@ class RPCMethods():
         return
     
     def GetFrontcasts(self, locationName, *args):
+    	if isinstance(locationName, unicode):
+    		locationName = locationName.encode('utf-8')
         center = GeoCode(locationName)
         #bound = (center.lat + 0.1, center.lat - 0.1, center.lon - 0.1, center.lon + 0.1)
         bound = (center['lat'] + 0.1, center['lat'] - 0.1, center['lon'] - 0.1, center['lon'] + 0.1)
