@@ -12,9 +12,12 @@ import time
 import urllib
 import wsgiref.handlers
 import json
-
 import sys
 import urlparse
+
+import pywapi
+
+from xml.dom import minidom
 
 from django.utils import simplejson
 from google.appengine.ext import db
@@ -25,17 +28,17 @@ from google.appengine.ext.webapp import template
 def GeoCode(address, sensor = "true", **geo_args):
     geo_args.update({
         'address': address,
-        'sensor': sensor  
+        'sensor': sensor,
+        'region': 'Taiwan'
     })
     GEOCODE_BASE_URL = 'http://maps.googleapis.com/maps/api/geocode/json' 
     url = GEOCODE_BASE_URL + '?' + urllib.urlencode(geo_args)
     results = simplejson.load(urllib.urlopen(url))
-    #print simplejson.dumps([s['formatted_address'] for s in results['results']], indent=2)
+    if results['status'] != 'OK':
+        return ''
     #print (results['results'][0]['geometry']['location']['lat'])
     #print (results['results'][0]['geometry']['location']['lng'])
     geoCoordinate = results['results'][0]['geometry']['location']
-    print (geoCoordinate['lat'])
-    print (geoCoordinate['lng'])
     #return db.GeoPt(lat = geoCoordinate['lat'], lon = geoCoordinate['lng'])
     return {'lat' : geoCoordinate['lat'], 'lon' : geoCoordinate['lng']}
 
@@ -52,7 +55,6 @@ class Frontcast(db.Model):
     time = db.DateTimeProperty(auto_now_add=False)
     latitude = db.FloatProperty()
     longitude = db.FloatProperty()
-    #location = db.GeoPtProperty()
     type = db.CategoryProperty()
     level = db.IntegerProperty()
 
@@ -88,58 +90,81 @@ class RPCMethods():
     def ReportFrontcast(self, *args):
         frontcast = Frontcast()
         frontcast.user_id = args[0]
-        #frontcast.location = db.GeoPt(lat = float(args[1]), lon = float(args[2]))
         frontcast.latitude = float(args[1])
         frontcast.longitude = float(args[2])
         frontcast.type = db.Category(args[3])
         frontcast.level = int(args[4])
         frontcast.time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
         frontcast.put()
-        #print (frontcast.location.lat)
         return
     
     def GetFrontcasts(self, locationName, *args):
-    	if isinstance(locationName, unicode):
-    		locationName = locationName.encode('utf-8')
+        if isinstance(locationName, unicode):
+    	      locationName = locationName.encode('utf-8')
         center = GeoCode(locationName)
-        #bound = (center.lat + 0.1, center.lat - 0.1, center.lon - 0.1, center.lon + 0.1)
+        if center == '':
+            return ''
+        
         bound = (center['lat'] + 0.1, center['lat'] - 0.1, center['lon'] - 0.1, center['lon'] + 0.1)
-
-        #query = db.GqlQuery("SELECT * FROM Frontcast WHERE location.lat <= :top AND location.lat >= :bottom AND location.lon >= :left AND location.lon <= :right ORDER BY time DESC LIMIT 100",
-        #                     top = center[0], bottom = center[1], left = center[2], right = center[3])
         query = db.GqlQuery("SELECT * FROM Frontcast WHERE latitude <= :top AND latitude >= :bottom  ORDER BY latitude DESC LIMIT 200",
                              top = bound[0], bottom = bound[1])
         castList = []
         for cast in query:
             if cast.longitude >= bound[2] and cast.longitude <= bound[3]:
                 castList.append(cast)
-        #castList.sort(key=lambda x: x.time, reverse=True)
-        #return castList
         return sorted(castList, key=lambda x: x.time, reverse=True)
     
-    """
-    def GetGreetings(self, current_user, *args):
-        greetings_query = Greeting.all().order('-date')
-        greetings = greetings_query.fetch(1000)
-        return greetings
+    def GetLocationName(self, lat, lon, sensor='true', **loc_args):
+        loc_args.update({
+            'latlng': lat+','+lon,
+            'sensor': sensor
+        })
+        GEOCODE_BASE_URL = 'http://maps.googleapis.com/maps/api/geocode/json' 
+        url = GEOCODE_BASE_URL + '?' + urllib.urlencode(loc_args)
+        results = simplejson.load(urllib.urlopen(url))
+        if results['status'] != 'OK':
+           return ''
+        locationInfo = results['results'][0]['address_components']
+        for n in locationInfo:
+            if n[types][0] == 'colloquial_area'
+                return n['short_name']
+        for n in locationInfo:
+            if n[types][0] == 'natural_feature'
+                return n['short_name']
+        for n in locationInfo:
+            if n[types][0] == 'sublocality'
+                return n['short_name']
+        for n in locationInfo:
+            if n[types][0] == 'locality'
+                return n['short_name']
+        for n in locationInfo:
+            if n[types][0] == 'administrative_area_level_1'
+                return n['short_name']
+        for n in locationInfo:
+            if n[types][0] == 'administrative_area_level_2'
+                return n['short_name']
+        for n in locationInfo:
+            if n[types][0] == 'administrative_area_level_3'
+                return n['short_name']
+        return locationInfo[len(locationInfo)-1]['short_name']
+        #results
+        #locationName = results['results'][0]
+        #return results
 
-    def PostGreeting(self, current_user, *args):
-        
-        greeting = Greeting()
-        if current_user:
-            greeting.user_id = current_user.id
-            greeting.user_name = current_user.name
-        greeting.content = args[0]
-        greeting.date = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
-        greeting.put()
-        return
-    """
+    def GetGoogleWeather(self, locationName, **googleweather_args):
+        if isinstance(locationName, unicode):
+    	      locationName = locationName.encode('utf-8')
+        weatherInfo = pywapi.get_weather_from_google(locationName, hl='zh-TW')
+        currentInfo = weatherInfo['current_conditions']
+        return currentInfo
+
+
 def main():
     util.run_wsgi_app(webapp.WSGIApplication(
         [(r"/", HomeHandler),
          (r"/rpc", RPCHandler)],
         debug = True))
-    #GeoCode(address = "taipei", sensor = "true")
+    GeoCode(address = "taipei", sensor = "true")
 
 if __name__ == "__main__":
     main()

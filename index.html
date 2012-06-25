@@ -17,6 +17,8 @@
 
     <div> Name: <input type="text" id="name"></div>
     <div> <button id="get">get</button> </div>
+    <div> <button id="getLocationName">getLocationName</button> </div>
+    <div> <button id="getGoogleWeather">getGoogleWeather</button> </div>
     <script>
 		$("#submit").click(function() {
 			alert('hi');
@@ -41,6 +43,31 @@
 				console.log(response);
 			});
       });
+
+      $("#getLocationName").click(function() {
+			alert('query location name');
+			var params = ["GetLocationName", $("#lat").val(), $('#lng').val()];
+			$.ajax({
+				type:'POST', 
+            url:'/rpc', 
+				data: JSON.stringify(params)
+			}).done(function(response) {
+				console.log(response);
+			});
+      });
+      
+      $("#getGoogleWeather").click(function() {
+			alert('query Google');
+			var params = ["GetGoogleWeather", $("#name").val()];
+			$.ajax({
+				type:'POST', 
+            url:'/rpc', 
+				data: JSON.stringify(params)
+			}).done(function(response) {
+				console.log(response);
+			});
+      });
+
 	</script>
 </body>
 </html>
