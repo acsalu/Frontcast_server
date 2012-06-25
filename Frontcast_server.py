@@ -112,7 +112,7 @@ class RPCMethods():
         for cast in query:
             if cast.longitude >= bound[2] and cast.longitude <= bound[3]:
                 castList.append(cast)
-        return sorted(castList, key=lambda x: x.time, reverse=True)
+        return {'results': sorted(castList, key=lambda x: x.time, reverse=True)}
     
     def GetLocationName(self, lat, lon, sensor='true', **loc_args):
         loc_args.update({
