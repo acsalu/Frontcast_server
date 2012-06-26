@@ -27,6 +27,7 @@ from google.appengine.ext.webapp import template
 def GeoCode(address, sensor = "true", **geo_args):
     geo_args.update({
         'address': address,
+        'bounds': '21.7,118.8|25.5,122.6',
         'sensor': sensor,
         'region': 'Taiwan'
     })
