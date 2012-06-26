@@ -126,26 +126,26 @@ class RPCMethods():
         locationInfo = results['results'][0]['address_components']
         for n in locationInfo:
             if n['types'][0] == 'colloquial_area':
-                return n['short_name']
+                return {'name': n['short_name']}
         for n in locationInfo:
             if n['types'][0] == 'natural_feature':
-                return n['short_name']
+                return {'name': n['short_name']}
         for n in locationInfo:
             if n['types'][0] == 'sublocality':
-                return n['short_name']
+                return {'name': n['short_name']}
         for n in locationInfo:
             if n['types'][0] == 'locality':
-                return n['short_name']
+                return {'name': n['short_name']}
         for n in locationInfo:
             if n['types'][0] == 'administrative_area_level_1':
-                return n['short_name']
+                return {'name': n['short_name']}
         for n in locationInfo:
             if n['types'][0] == 'administrative_area_level_2':
-                return n['short_name']
+                return {'name': n['short_name']}
         for n in locationInfo:
             if n['types'][0] == 'administrative_area_level_3':
                 return n['short_name']
-        return locationInfo[len(locationInfo)-1]['short_name']
+        return {'name': locationInfo[len(locationInfo)-1]['short_name']}
         #results
         #locationName = results['results'][0]
         #return results
