@@ -69,5 +69,5 @@ def encode(input):
         Raises: 
             TypeError: Typically occurs when an input object contains an unsupported 
             type. 
-     """ 
+     """
     return GqlEncoder().encode(input)   
