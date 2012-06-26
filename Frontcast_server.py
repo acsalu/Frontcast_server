@@ -35,10 +35,7 @@ def GeoCode(address, sensor = "true", **geo_args):
     results = simplejson.load(urllib.urlopen(url))
     if results['status'] != 'OK':
         return ''
-    #print (results['results'][0]['geometry']['location']['lat'])
-    #print (results['results'][0]['geometry']['location']['lng'])
     geoCoordinate = results['results'][0]['geometry']['location']
-    #return db.GeoPt(lat = geoCoordinate['lat'], lon = geoCoordinate['lng'])
     return {'lat' : geoCoordinate['lat'], 'lon' : geoCoordinate['lng']}
 
 class HomeHandler(webapp.RequestHandler):
@@ -105,7 +102,7 @@ class RPCMethods():
             return ''
         
         bound = (center['lat'] + 0.1, center['lat'] - 0.1, center['lon'] - 0.1, center['lon'] + 0.1)
-        query = db.GqlQuery("SELECT * FROM Frontcast WHERE latitude <= :top AND latitude >= :bottom  ORDER BY latitude DESC LIMIT 200",
+        query = db.GqlQuery("SELECT * FROM Frontcast WHERE latitude <= :top AND latitude >= :bottom  ORDER BY latitude DESC LIMIT 100",
                              top = bound[0], bottom = bound[1])
         castList = []
         for cast in query:
@@ -116,6 +113,7 @@ class RPCMethods():
     def GetLocationName(self, lat, lon, sensor='true', **loc_args):
         loc_args.update({
             'latlng': lat+','+lon,
+            'language': 'zh-TW',
             'sensor': sensor
         })
         GEOCODE_BASE_URL = 'http://maps.googleapis.com/maps/api/geocode/json' 
@@ -123,6 +121,7 @@ class RPCMethods():
         results = simplejson.load(urllib.urlopen(url))
         if results['status'] != 'OK':
            return ''
+        
         locationInfo = results['results'][0]['address_components']
         for n in locationInfo:
             if n['types'][0] == 'colloquial_area':
@@ -130,9 +129,9 @@ class RPCMethods():
         for n in locationInfo:
             if n['types'][0] == 'natural_feature':
                 return {'name': n['short_name']}
-        for n in locationInfo:
-            if n['types'][0] == 'sublocality':
-                return {'name': n['short_name']}
+        #for n in locationInfo:
+        #    if n['types'][0] == 'sublocality':
+        #        return {'name': n['short_name']}
         for n in locationInfo:
             if n['types'][0] == 'locality':
                 return {'name': n['short_name']}
@@ -145,11 +144,9 @@ class RPCMethods():
         for n in locationInfo:
             if n['types'][0] == 'administrative_area_level_3':
                 return n['short_name']
+        #return locationInfo
         return {'name': locationInfo[len(locationInfo)-1]['short_name']}
-        #results
-        #locationName = results['results'][0]
-        #return results
-
+         
     def GetGoogleWeather(self, locationName, **googleweather_args):
         if isinstance(locationName, unicode):
     	      locationName = locationName.encode('utf-8')
@@ -165,7 +162,6 @@ def main():
         [(r"/", HomeHandler),
          (r"/rpc", RPCHandler)],
         debug = True))
-    #GeoCode(address = "taipei", sensor = "true")
 
 if __name__ == "__main__":
     main()
